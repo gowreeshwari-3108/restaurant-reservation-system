@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Restaurant Reservation System</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/css/bootstrap.min.css">
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+        }
+    </style>
+</head>
+<body>
+    <div class="container mt-5">
+        <h1>Restaurant Reservation System</h1>
+        <table id="reservation-table" class="table table-striped">
+            <thead>
+                <tr>
+                    <th>Name</th>
+                    <th>Phone</th>
+                    <th>Check-in Time</th>
+                    <th>Checkout Status</th>
+                    <th>Delete</th>
+                </tr>
+            </thead>
+            <tbody id="table-body">
+            </tbody>
+        </table>
+        <form id="reservation-form">
+            <div class="mb-3">
+                <label for="guest-count" class="form-label">Guest Count:</label>
+                <input type="number" id="guest-count" class="form-control" required>
+            </div>
+            <div class="mb-3">
+                <label for="name" class="form-label">Name:</label>
+                <input type="text" id="name" class="form-control" required>
+            </div>
+            <div class="mb-3">
+                <label for="phone" class="form-label">Phone Number:</label>
+                <input type="tel" id="phone" class="form-control" required>
+            </div>
+            <button type="submit" class="btn btn-primary">Make Reservation</button>
+        </form>
+        <p id="seats-left">Seats Left: 100</p>
+        <div class="modal fade" id="error-modal" tabindex="-1" aria-hidden="true">
+            <div class="modal-dialog">
+                <div class="modal-content">
+                    <div class="modal-body">
+                        <p id="error-message"></p>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        let seatsLeft = 100;
+        let reservations = [];
+
+        document.getElementById('reservation-form').addEventListener('submit', (e) => {
+            e.preventDefault();
+            const guestCount = parseInt(document.getElementById('guest-count').value);
+            const name = document.getElementById('name').value;
+            const phone = document.getElementById('phone').value;
+
+            if (guestCount > seatsLeft) {
+                document.getElementById('error-message').innerText = 'Not enough seats available.';
+                const errorModal = new bootstrap.Modal(document.getElementById('error-modal'));
+                errorModal.show();
+                return;
+            }
+
+            const reservation = {
+                name,
+                phone,
+                guestCount,
+                checkInTime: new Date().toLocaleTimeString(),
+                checkOutTime: null
+            };
+
+            reservations.push(reservation);
+            updateTable();
+            updateSeatsLeft(-guestCount);
+            document.getElementById('reservation-form').reset();
+        });
+
+        function updateTable() {
+            const tableBody = document.getElementById('table-body');
+            tableBody.innerHTML = '';
+            reservations.forEach((reservation, index) => {
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td>${reservation.name}</td>
+                    <td>${reservation.phone}</td>
+                    <td>${reservation.checkInTime}</td>
+                    <td>${reservation.checkOutTime ? Checked out at ${reservation.checkOutTime} : '<button class="btn btn-primary" onclick="checkOut(${index})">Click to Checkout</button>'}</td>
+                    <td><button class="btn btn-danger" onclick="deleteReservation(${index})">Delete</button></td>
+                `;
+                tableBody.appendChild(row);
+            });
+        }
+
+        function updateSeatsLeft(change) {
+            seatsLeft += change;
+            document.getElementById('seats-left').innerText = Seats Left: ${seatsLeft};
+        }
+
+        function checkOut(index) {
+            const reservation = reservations[index];
+            reservation.checkOutTime = new Date().toLocaleTimeString();
+            updateSeatsLeft(reservation.guestCount);
+            updateTable();
+        }
+
+        function deleteReservation(index) {
+            const reservation = reservations[index];
+            if (reservation.checkOutTime) {
+                updateSeatsLeft(reservation.guestCount);
+            }
+            reservations.splice(index, 1);
+            updateTable();
+        }
+    </script>
+</body>
+</html>
